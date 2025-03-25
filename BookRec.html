@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Recommendation App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .book-card { margin-bottom: 20px; }
+        .container { max-width: 800px; }
+        .search-bar { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Book Recs</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="BookRec.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showGenres()">Genre</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4" id="main-content">
+        <input type="text" id="searchBook" class="form-control search-bar" placeholder="Search books by Title..." onkeyup="filterBooks()">
+        <div class="row" id="book-list"></div>
+        <div class="mt-4">
+            <h3>Add a Book</h3>
+            <input type="text" id="bookTitle" class="form-control" placeholder="Book Title">
+            <input type="text" id="bookAuthor" class="form-control mt-2" placeholder="Author">
+            <input type="text" id="bookGenre" class="form-control mt-2" placeholder="Genre">
+            <button class="btn btn-primary mt-2" onclick="addBook()">Add Book</button>
+        </div>
+    </div>
+
+    <script>
+        let books = JSON.parse(localStorage.getItem("books")) || [
+            { title: "The Great Gatsby", author: "F. Scott Fitzgerald", genre: "Classic" },
+            { title: "1984", author: "George Orwell", genre: "Dystopian" },
+            { title: "To Kill a Mockingbird", author: "Harper Lee", genre: "Historical Fiction" }
+        ];
+
+        function loadBooks() {
+            let bookList = document.getElementById("book-list");
+            bookList.innerHTML = "";
+            books.forEach((book, index) => {
+                let bookCard = document.createElement("div");
+                bookCard.classList.add("col-md-4");
+                bookCard.innerHTML = `
+                    <div class="card book-card">
+                        <div class="card-body">
+                            <h5 class="card-title">${book.title}</h5>
+                            <p class="card-text">by ${book.author}</p>
+                            <p class="card-text"><strong>Genre:</strong> ${book.genre}</p>
+                            <button class="btn btn-danger btn-sm" onclick="removeBook(${index})">Remove</button>
+                        </div>
+                    </div>`;
+                bookList.appendChild(bookCard);
+            });
+            localStorage.setItem("books", JSON.stringify(books));
+        }
+
+        function addBook() {
+            let title = document.getElementById("bookTitle").value;
+            let author = document.getElementById("bookAuthor").value;
+            let genre = document.getElementById("bookGenre").value;
+            if (title.trim() === "" || author.trim() === "" || genre.trim() === "") return;
+            books.push({ title, author, genre });
+            document.getElementById("bookTitle").value = "";
+            document.getElementById("bookAuthor").value = "";
+            document.getElementById("bookGenre").value = "";
+            loadBooks();
+        }
+
+        function removeBook(index) {
+            books.splice(index, 1);
+            loadBooks();
+        }
+
+        function filterBooks() {
+            let query = document.getElementById("searchBook").value.toLowerCase();
+            document.querySelectorAll(".card").forEach(card => {
+                let title = card.querySelector(".card-title").textContent.toLowerCase();
+                card.style.display = title.includes(query) ? "block" : "none";
+            });
+        }
+
+        function showGenres() {
+            let uniqueGenres = [...new Set(books.map(book => book.genre))];
+            let content = `<h3>Available Genres</h3><ul class='list-group'>`;
+            uniqueGenres.forEach(genre => {
+                content += `<li class='list-group-item'><a href='#' onclick='filterByGenre("${genre}")'>${genre}</a></li>`;
+            });
+            content += `</ul>`;
+            document.getElementById("main-content").innerHTML = content;
+        }
+
+        function filterByGenre(genre) {
+            let filteredBooks = books.filter(book => book.genre === genre);
+            let content = `<h3>Books in ${genre}</h3><div class='row'>`;
+            filteredBooks.forEach(book => {
+                content += `
+                    <div class="col-md-4">
+                        <div class="card book-card">
+                            <div class="card-body">
+                                <h5 class="card-title">${book.title}</h5>
+                                <p class="card-text">by ${book.author}</p>
+                                <p class="card-text"><strong>Genre:</strong> ${book.genre}</p>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            content += `</div><button class='btn btn-secondary mt-3' onclick='showGenres()'>Back</button>`;
+            document.getElementById("main-content").innerHTML = content;
+        }
+
+        document.addEventListener("DOMContentLoaded", loadBooks);
+    </script>
+</body>
+</html>
